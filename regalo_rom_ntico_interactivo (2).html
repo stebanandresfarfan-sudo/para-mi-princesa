@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regalo Romántico Interactivo 💖</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #1f0412 0%, #420a24 35%, #6e0d30 70%, #2b0016 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow-x: hidden;
+        }
+
+        .font-love {
+            font-family: 'Dancing Script', cursive;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(255, 105, 180, 0.6)); }
+            50% { transform: scale(1.08); filter: drop-shadow(0 0 45px rgba(255, 20, 147, 0.95)); }
+        }
+
+        .gift-bounce {
+            animation: pulseGlow 2.5s infinite ease-in-out;
+        }
+
+        .polaroid {
+            background: #ffffff;
+            padding: 10px 10px 24px 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(255,182,193,0.3);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0;
+            transform: scale(0) rotate(-10deg);
+        }
+
+        .polaroid:hover {
+            transform: scale(1.2) rotate(0deg) !important;
+            z-index: 50 !important;
+            box-shadow: 0 25px 50px rgba(255,105,180,0.8);
+        }
+
+        @keyframes floatAnim {
+            0%, 100% { transform: translateY(0px) rotate(var(--rot)); }
+            50% { transform: translateY(-14px) rotate(var(--rot)); }
+        }
+
+        .floating-photo {
+            animation: floatAnim 4.5s ease-in-out infinite;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255,255,255,0.2);
+        }
+
+        .gift-box {
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .lid {
+            transition: transform 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.8s;
+            transform-origin: top center;
+        }
+
+        .gift-box.open .lid {
+            transform: translateY(-180px) rotateX(80deg) rotateZ(-20deg) scale(0.6);
+            opacity: 0;
+        }
+
+        .gift-box.open .box-body {
+            transform: scale(0);
+            opacity: 0;
+            transition: transform 0.8s ease, opacity 0.6s;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 105, 180, 0.5);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen w-screen relative flex items-center justify-center select-none overflow-y-auto overflow-x-hidden">
+
+    <!-- Canvas para los corazones flotantes -->
+    <canvas id="heartCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+    <!-- Pantalla Inicial con la Caja de Regalo -->
+    <div id="giftContainer" class="z-20 text-center flex flex-col items-center justify-center transition-all duration-700 my-auto p-4">
+        
+        <!-- Botones superiores para acciones -->
+        <div class="flex flex-wrap gap-3 justify-center mb-8">
+            <button id="configPhotosBtn" class="bg-white/10 hover:bg-white/20 backdrop-blur-md text-pink-200 px-5 py-2.5 rounded-full border border-pink-300/40 text-xs md:text-sm font-semibold transition-all hover:scale-105 flex items-center gap-2 shadow-xl">
+                📷 Subir/Cambiar tus 4 Fotos
+            </button>
+            <button id="generateShareLinkBtn" class="bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white px-5 py-2.5 rounded-full border border-pink-200/40 text-xs md:text-sm font-semibold transition-all hover:scale-105 flex items-center gap-2 shadow-xl">
+                🔗 Generar Link para Compartir
+            </button>
+        </div>
+
+        <!-- Caja de Regalo animada -->
+        <div id="giftBox" class="gift-box gift-bounce relative w-52 h-52 md:w-64 md:h-64 mb-8">
+            <div class="lid absolute -top-5 -left-2 w-[108%] h-16 bg-gradient-to-r from-pink-600 via-rose-500 to-pink-600 rounded-xl shadow-2xl z-20 flex items-center justify-center border-b-2 border-pink-300">
+                <div class="absolute -top-12 w-20 h-14 bg-rose-400 rounded-full border-4 border-yellow-300 shadow-xl flex items-center justify-center">
+                    <div class="w-8 h-8 bg-yellow-400 rounded-full shadow-inner"></div>
+                </div>
+                <div class="w-10 h-full bg-yellow-400 opacity-95 shadow-inner"></div>
+            </div>
+            <div class="box-body w-full h-full bg-gradient-to-br from-rose-600 via-pink-600 to-red-700 rounded-b-2xl shadow-2xl relative overflow-hidden flex justify-center border-2 border-pink-400">
+                <div class="w-12 h-full bg-yellow-400 opacity-95 shadow-md"></div>
+                <div class="absolute top-1/2 left-0 w-full h-12 bg-yellow-400 opacity-95 shadow-md transform -translate-y-1/2"></div>
+            </div>
+        </div>
+        
+        <p class="text-pink-100 font-love text-3xl md:text-5xl tracking-wide animate-pulse drop-shadow-[0_5px_15px_rgba(255,20,147,0.8)]">
+            ✨ Toca el regalo para abrir mi corazón... 🎁
+        </p>
+    </div>
+
+    <!-- Escena Romántica Revelada -->
+    <div id="romanticScene" class="hidden min-h-screen w-full z-10 flex flex-col items-center justify-between p-4 md:p-8 relative">
+        
+        <div class="w-full flex justify-between items-center z-40 max-w-6xl mb-4">
+            <button id="resetBtn" class="bg-white/10 hover:bg-white/20 backdrop-blur-md text-pink-200 px-4 py-2 rounded-full border border-pink-300/30 text-xs md:text-sm font-semibold transition-all hover:scale-105 flex items-center gap-2 shadow-lg">
+                🔄 Reabrir Regalo
+            </button>
+            <div class="flex gap-2">
+                <button id="openPhotoUploadModalBtn" class="bg-rose-600/70 hover:bg-rose-600/90 backdrop-blur-md text-white px-4 py-2 rounded-full border border-pink-300/30 text-xs md:text-sm font-semibold transition-all hover:scale-105 flex items-center gap-1 shadow-lg">
+                    📷 Cambiar Fotos
+                </button>
+                <button id="musicToggle" class="bg-white/10 hover:bg-white/20 backdrop-blur-md text-pink-200 px-4 py-2 rounded-full border border-pink-300/30 text-xs md:text-sm font-semibold transition-all hover:scale-105 flex items-center gap-2 shadow-lg">
+                    🎵 <span id="musicText">Música ON</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="w-full max-w-6xl relative flex-1 flex items-center justify-center py-8">
+            <!-- Tarjeta Central de Cristal con la dedicatoria personalizada -->
+            <div id="mainCard" class="glass-card rounded-3xl p-6 md:p-10 max-w-2xl text-center transform scale-0 opacity-0 transition-all duration-1000 z-30 mx-auto my-auto border border-pink-300/40">
+                <div class="text-pink-300 text-3xl md:text-4xl mb-3 animate-bounce">✨ 💖 ✨</div>
+                <h1 class="font-love text-2xl md:text-4xl lg:text-5xl text-white font-bold leading-relaxed drop-shadow-[0_4px_12px_rgba(255,20,147,0.9)]">
+                    "sin darte cuenta te has vuelto la mujer que a logrado hacer que estos ojitos vuelvan a brillar , que este corazon vuelva a palpitar, que estos sentimientos vuelvan a estallar de felicidad, gracias por hacerme el hombre mas feliz en este mundo mi princesa,"
+                </h1>
+                <div class="mt-6 text-pink-200 text-xs md:text-sm tracking-widest uppercase opacity-90 font-semibold border-t border-pink-300/20 pt-4">
+                    Con todo mi amor eterno ❤️
+                </div>
+            </div>
+
+            <!-- Fotos Polaroid Flotantes Animadas -->
+            <div id="photo1" class="polaroid floating-photo absolute top-[2%] left-[2%] md:top-[5%] md:left-[5%] w-32 md:w-52 z-20 rounded-lg" style="--rot: -8deg;">
+                <img id="imgDisplay1" src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=500&q=80" alt="Recuerdo 1" class="w-full h-36 md:h-60 object-cover rounded">
+                <p class="font-love text-center text-gray-700 text-base md:text-lg mt-2">Juntos Siempre 🐾</p>
+            </div>
+
+            <div id="photo2" class="polaroid floating-photo absolute top-[2%] right-[2%] md:top-[5%] md:right-[5%] w-32 md:w-52 z-20 rounded-lg" style="--rot: 7deg;">
+                <img id="imgDisplay2" src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=500&q=80" alt="Recuerdo 2" class="w-full h-36 md:h-60 object-cover rounded">
+                <p class="font-love text-center text-gray-700 text-base md:text-lg mt-2">Amor Infinito ✨</p>
+            </div>
+
+            <div id="photo3" class="polaroid floating-photo absolute bottom-[2%] left-[2%] md:bottom-[5%] md:left-[5%] w-32 md:w-52 z-20 rounded-lg" style="--rot: 6deg;">
+                <img id="imgDisplay3" src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=500&q=80" alt="Recuerdo 3" class="w-full h-36 md:h-60 object-cover rounded">
+                <p class="font-love text-center text-gray-700 text-base md:text-lg mt-2">Mi Princesa 👑</p>
+            </div>
+
+            <div id="photo4" class="polaroid floating-photo absolute bottom-[2%] right-[2%] md:bottom-[5%] md:right-[5%] w-32 md:w-52 z-20 rounded-lg" style="--rot: -9deg;">
+                <img id="imgDisplay4" src="https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=500&q=80" alt="Recuerdo 4" class="w-full h-36 md:h-60 object-cover rounded">
+                <p class="font-love text-center text-gray-700 text-base md:text-lg mt-2">Tu y Yo 📸</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Carga de Fotos -->
+    <div id="photoUploadModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-card bg-rose-950/90 rounded-3xl p-6 w-full max-w-xl border border-pink-400/40 text-center shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h3 class="font-love text-3xl text-pink-200 mb-2">📸 Personaliza tus 4 Fotos</h3>
+            <p class="text-xs text-pink-200/80 mb-6">Sube las fotos desde tu dispositivo. Se guardarán en tu navegador y podrás generar un link único para compartir.</p>
+
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="flex flex-col items-center bg-white/5 p-3 rounded-2xl border border-pink-300/20">
+                    <span class="text-xs font-semibold text-pink-200 mb-2">Foto 1</span>
+                    <img id="preview1" src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=200&q=80" class="w-20 h-20 object-cover rounded-xl mb-2 shadow">
+                    <label class="cursor-pointer bg-pink-600 hover:bg-pink-500 text-white text-xs px-3 py-1.5 rounded-full font-medium transition-all">
+                        Elegir Foto
+                        <input type="file" accept="image/*" class="hidden" onchange="previewImage(event, 1)">
+                    </label>
+                </div>
+
+                <div class="flex flex-col items-center bg-white/5 p-3 rounded-2xl border border-pink-300/20">
+                    <span class="text-xs font-semibold text-pink-200 mb-2">Foto 2</span>
+                    <img id="preview2" src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=200&q=80" class="w-20 h-20 object-cover rounded-xl mb-2 shadow">
+                    <label class="cursor-pointer bg-pink-600 hover:bg-pink-500 text-white text-xs px-3 py-1.5 rounded-full font-medium transition-all">
+                        Elegir Foto
+                        <input type="file" accept="image/*" class="hidden" onchange="previewImage(event, 2)">
+                    </label>
+                </div>
+
+                <div class="flex flex-col items-center bg-white/5 p-3 rounded-2xl border border-pink-300/20">
+                    <span class="text-xs font-semibold text-pink-200 mb-2">Foto 3</span>
+                    <img id="preview3" src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=200&q=80" class="w-20 h-20 object-cover rounded-xl mb-2 shadow">
+                    <label class="cursor-pointer bg-pink-600 hover:bg-pink-500 text-white text-xs px-3 py-1.5 rounded-full font-medium transition-all">
+                        Elegir Foto
+                        <input type="file" accept="image/*" class="hidden" onchange="previewImage(event, 3)">
+                    </label>
+                </div>
+
+                <div class="flex flex-col items-center bg-white/5 p-3 rounded-2xl border border-pink-300/20">
+                    <span class="text-xs font-semibold text-pink-200 mb-2">Foto 4</span>
+                    <img id="preview4" src="https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=200&q=80" class="w-20 h-20 object-cover rounded-xl mb-2 shadow">
+                    <label class="cursor-pointer bg-pink-600 hover:bg-pink-500 text-white text-xs px-3 py-1.5 rounded-full font-medium transition-all">
+                        Elegir Foto
+                        <input type="file" accept="image/*" class="hidden" onchange="previewImage(event, 4)">
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center border-t border-pink-300/20 pt-4">
+                <button id="clearPhotosBtn" class="text-pink-300/70 hover:text-pink-200 text-xs underline">Restablecer por defecto</button>
+                <button id="closePhotoModalBtn" class="bg-gradient-to-r from-pink-500 to-rose-600 text-white text-sm px-6 py-2.5 rounded-xl font-bold shadow-md hover:scale-105 transition-all">
+                    Guardar Cambios ❤️
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación Toast -->
+    <div id="toastMessage" class="fixed bottom-6 z-50 bg-pink-600/90 text-white px-6 py-3 rounded-full text-xs md:text-sm font-semibold border border-pink-300/50 backdrop-blur-md shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none">
+        Link copiado al portapapeles 📋
+    </div>
+
+    <!-- Script de Funcionalidades e Interacción -->
+    <script>
+        let audioCtx = null;
+        let isAudioPlaying = false;
+        let melodyInterval = null;
+
+        function initMelody() {
+            if (isAudioPlaying) return;
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                isAudioPlaying = true;
+                const notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25];
+
+                melodyInterval = setInterval(() => {
+                    if (!audioCtx || audioCtx.state === 'suspended') {
+                        audioCtx && audioCtx.resume();
+                    }
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    const noteFreq = notes[Math.floor(Math.random() * notes.length)];
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(noteFreq, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 0.3);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 2.8);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 2.9);
+                }, 480);
+
+                document.getElementById('musicText').innerText = 'Música ON';
+            } catch (e) {
+                console.log("Audio API Error:", e);
+            }
+        }
+
+        function toggleAudio() {
+            if (!audioCtx) {
+                initMelody();
+                return;
+            }
+            if (audioCtx.state === 'running') {
+                audioCtx.suspend();
+                document.getElementById('musicText').innerText = 'Música OFF';
+            } else {
+                audioCtx.resume();
+                document.getElementById('musicText').innerText = 'Música ON';
+            }
+        }
+
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+        let hearts = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class HeartParticle {
+            constructor(x, y, isBurst = false) {
+                this.x = x || Math.random() * canvas.width;
+                this.y = y || (isBurst ? canvas.height / 2 : canvas.height + 20);
+                this.size = Math.random() * 14 + 6;
+                this.speedY = isBurst ? (Math.random() - 0.5) * 14 : -Math.random() * 2 - 0.8;
+                this.speedX = isBurst ? (Math.random() - 0.5) * 14 : Math.sin(Math.random() * Math.PI) * 1.2;
+                this.opacity = Math.random() * 0.7 + 0.3;
+                this.color = `hsla(${Math.random() * 35 + 325}, 100%, 72%, ${this.opacity})`;
+                this.rotation = Math.random() * Math.PI;
+                this.rotSpeed = (Math.random() - 0.5) * 0.04;
+                this.isBurst = isBurst;
+                this.gravity = isBurst ? 0.18 : 0;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                const d = this.size;
+                ctx.moveTo(0, 0);
+                ctx.bezierCurveTo(-d / 2, -d / 2, -d, d / 3, 0, d);
+                ctx.bezierCurveTo(d, d / 3, d / 2, -d / 2, 0, 0);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.isBurst) {
+                    this.speedY += this.gravity;
+                    this.opacity -= 0.012;
+                }
+                this.rotation += this.rotSpeed;
+
+                if (!this.isBurst && this.y < -30) {
+                    this.y = canvas.height + 20;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+        }
+
+        for (let i = 0; i < 40; i++) {
+            hearts.push(new HeartParticle());
+        }
+
+        function animateHearts() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = hearts.length - 1; i >= 0; i--) {
+                hearts[i].update();
+                hearts[i].draw();
+                if (hearts[i].isBurst && hearts[i].opacity <= 0) {
+                    hearts.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animateHearts);
+        }
+        animateHearts();
+
+        function createHeartBurst(x, y, count = 50) {
+            for (let i = 0; i < count; i++) {
+                hearts.push(new HeartParticle(x, y, true));
+            }
+        }
+
+        window.addEventListener('click', (e) => {
+            if (!e.target.closest('button') && !e.target.closest('#photoUploadModal')) {
+                createHeartBurst(e.clientX, e.clientY, 12);
+            }
+        });
+
+        const defaultPhotos = [
+            "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=500&q=80",
+            "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=500&q=80",
+            "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=500&q=80",
+            "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=500&q=80"
+        ];
+
+        let currentPhotos = [...defaultPhotos];
+
+        function loadStoredPhotos() {
+            if (window.location.hash && window.location.hash.length > 20) {
+                try {
+                    const encodedData = window.location.hash.substring(1);
+                    const parsed = JSON.parse(decodeURIComponent(atob(encodedData)));
+                    if (Array.isArray(parsed) && parsed.length === 4) {
+                        currentPhotos = parsed;
+                        savePhotosToLocalStorage();
+                        updateDOMPhotos();
+                        showToast("¡Fotos cargadas desde el link compartido! 💕");
+                        return;
+                    }
+                } catch(e) {
+                    console.log("Error al leer el hash:", e);
+                }
+            }
+
+            const saved = localStorage.getItem('romantic_gift_photos');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length === 4) {
+                        currentPhotos = parsed;
+                    }
+                } catch(e) {}
+            }
+            updateDOMPhotos();
+        }
+
+        function savePhotosToLocalStorage() {
+            localStorage.setItem('romantic_gift_photos', JSON.stringify(currentPhotos));
+        }
+
+        function updateDOMPhotos() {
+            for (let i = 1; i <= 4; i++) {
+                const src = currentPhotos[i - 1];
+                document.getElementById(`imgDisplay${i}`).src = src;
+                document.getElementById(`preview${i}`).src = src;
+            }
+        }
+
+        function compressAndProcessImage(file, index) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxDim = 400;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxDim) {
+                            height *= maxDim / width;
+                            width = maxDim;
+                        }
+                    } else {
+                        if (height > maxDim) {
+                            width *= maxDim / height;
+                            height = maxDim;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.65);
+                    currentPhotos[index - 1] = compressedBase64;
+                    savePhotosToLocalStorage();
+                    updateDOMPhotos();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function previewImage(event, index) {
+            const file = event.target.files[0];
+            if (file) {
+                compressAndProcessImage(file, index);
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastMessage');
+            toast.innerText = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 3500);
+        }
+
+        function generateShareableLink() {
+            try {
+                const encodedData = btoa(encodeURIComponent(JSON.stringify(currentPhotos)));
+                const shareableURL = window.location.origin + window.location.pathname + '#' + encodedData;
+
+                const tempInput = document.createElement('input');
+                document.body.appendChild(tempInput);
+                tempInput.value = shareableURL;
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+
+                showToast("¡Link copiado! Envíalo para compartir tus fotos 💖");
+            } catch (e) {
+                showToast("Fotos muy pesadas para el link. Intenta con imágenes más livianas.");
+            }
+        }
+
+        const giftContainer = document.getElementById('giftContainer');
+        const giftBox = document.getElementById('giftBox');
+        const romanticScene = document.getElementById('romanticScene');
+        const mainCard = document.getElementById('mainCard');
+        const photosDOM = [
+            document.getElementById('photo1'),
+            document.getElementById('photo2'),
+            document.getElementById('photo3'),
+            document.getElementById('photo4')
+        ];
+
+        function openGift() {
+            initMelody();
+            giftBox.classList.add('open');
+            const rect = giftBox.getBoundingClientRect();
+            createHeartBurst(rect.left + rect.width / 2, rect.top + rect.height / 2, 80);
+
+            setTimeout(() => {
+                giftContainer.style.opacity = '0';
+                giftContainer.style.transform = 'scale(0.5)';
+                setTimeout(() => {
+                    giftContainer.classList.add('hidden');
+                    romanticScene.classList.remove('hidden');
+
+                    setTimeout(() => {
+                        mainCard.style.transform = 'scale(1)';
+                        mainCard.style.opacity = '1';
+                    }, 100);
+
+                    photosDOM.forEach((photo, index) => {
+                        setTimeout(() => {
+                            photo.style.opacity = '1';
+                            const rot = photo.style.getPropertyValue('--rot');
+                            photo.style.transform = `scale(1) rotate(${rot})`;
+                            createHeartBurst(
+                                photo.offsetLeft + photo.offsetWidth / 2,
+                                photo.offsetTop + photo.offsetHeight / 2,
+                                20
+                            );
+                        }, 500 + index * 350);
+                    });
+
+                }, 500);
+            }, 700);
+        }
+
+        function resetGift() {
+            romanticScene.classList.add('hidden');
+            mainCard.style.transform = 'scale(0)';
+            mainCard.style.opacity = '0';
+
+            photosDOM.forEach(photo => {
+                photo.style.opacity = '0';
+                photo.style.transform = 'scale(0) rotate(-10deg)';
+            });
+
+            giftBox.classList.remove('open');
+            giftContainer.classList.remove('hidden');
+            giftContainer.style.opacity = '1';
+            giftContainer.style.transform = 'scale(1)';
+        }
+
+        giftBox.addEventListener('click', openGift);
+        document.getElementById('resetBtn').addEventListener('click', resetGift);
+        document.getElementById('musicToggle').addEventListener('click', toggleAudio);
+
+        const photoUploadModal = document.getElementById('photoUploadModal');
+        const configPhotosBtn = document.getElementById('configPhotosBtn');
+        const openPhotoUploadModalBtn = document.getElementById('openPhotoUploadModalBtn');
+        const closePhotoModalBtn = document.getElementById('closePhotoModalBtn');
+        const clearPhotosBtn = document.getElementById('clearPhotosBtn');
+
+        configPhotosBtn.addEventListener('click', () => photoUploadModal.classList.remove('hidden'));
+        openPhotoUploadModalBtn.addEventListener('click', () => photoUploadModal.classList.remove('hidden'));
+        closePhotoModalBtn.addEventListener('click', () => photoUploadModal.classList.add('hidden'));
+        document.getElementById('generateShareLinkBtn').addEventListener('click', generateShareableLink);
+
+        clearPhotosBtn.addEventListener('click', () => {
+            currentPhotos = [...defaultPhotos];
+            localStorage.removeItem('romantic_gift_photos');
+            history.replaceState(null, null, ' ');
+            updateDOMPhotos();
+            showToast("Fotos restablecidas por defecto");
+        });
+
+        loadStoredPhotos();
+    </script>
+</body>
+</html>
